@@ -5,5 +5,4 @@ fb-color
 Makefile
 CMakeCache.txt
 CMakeFiles/
-CMakeLists.txt
 cmake_install.cmake
