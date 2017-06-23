@@ -15,6 +15,10 @@ extern "C" {
 #include <sys/time.h>
 #include <sys/ioctl.h>
 
+#ifdef INITROOT_STARTUP
+#include <initroot_startup.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif
@@ -30,21 +34,36 @@ struct mxcfb_gbl_alpha {
 };
 #define MXCFB_SET_GBL_ALPHA     _IOW('F', 0x21, struct mxcfb_gbl_alpha)
 
+#ifdef INITROOT_STARTUP
+int startup_pre_end(void) { return 0; }
+#endif
 
 int main(int argc, char **argv)
 {
+#ifdef INITROOT_STARTUP
+	startup_begin();
+	startup_cend(startup_pre_end);
+#endif
+
 	int fd_fb;
 	size_t overlay_sz;
 	char *overlay_buf;
 	struct mxcfb_gbl_alpha alpha;
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: ./splash </dev/fb0|1>\n");
-		return EXIT_FAILURE;
+	if (argc == 1) {
+		if ((fd_fb = open("/dev/fb0", O_RDWR)) < 0) {
+			fprintf(stderr, "Failed to open /dev/fb0!\n");
+			return EXIT_FAILURE;
+		}
 	}
-
-	if ((fd_fb = open(argv[1], O_RDWR)) < 0) {
-		fprintf(stderr, "Failed to open %s!\n", argv[1]);
+	else if (argc == 2) {
+		if ((fd_fb = open(argv[1], O_RDWR)) < 0) {
+			fprintf(stderr, "Failed to open %s!\n", argv[1]);
+			return EXIT_FAILURE;
+		}
+	}
+	else {
+		fprintf(stderr, "Usage: ./splash </dev/fb0|1>\n");
 		return EXIT_FAILURE;
 	}
 
@@ -68,18 +87,44 @@ int main(int argc, char **argv)
 	// enable FB
 	ioctl(fd_fb, FBIOBLANK, FB_BLANK_UNBLANK);
 
-	// draw colors
-	for (size_t i = 0; i < overlay_sz; i+=4) {
-		overlay_buf[i]= 0xff;
-		overlay_buf[i+1] = 0x00;
-		overlay_buf[i+2] = 0x00;
-		overlay_buf[i+3] = 0xff;
-	}
+	do {
+		// draw blue
+		for (size_t i = 0; i < overlay_sz; i+=4) {
+			overlay_buf[i]= 0xff;
+			overlay_buf[i+1] = 0x00;
+			overlay_buf[i+2] = 0x00;
+			overlay_buf[i+3] = 0xff;
+		}
+		sleep(1);
+
+		// draw green
+		for (size_t i = 0; i < overlay_sz; i+=4) {
+			overlay_buf[i]= 0x00;
+			overlay_buf[i+1] = 0xff;
+			overlay_buf[i+2] = 0x00;
+			overlay_buf[i+3] = 0xff;
+		}
+		sleep(1);
+
+		// draw red
+		for (size_t i = 0; i < overlay_sz; i+=4) {
+			overlay_buf[i]= 0x00;
+			overlay_buf[i+1] = 0x00;
+			overlay_buf[i+2] = 0xff;
+			overlay_buf[i+3] = 0xff;
+		}
+		sleep(1);
+	} while (true);
 
 	// disable FB
 //	ioctl(fd_fb, FBIOBLANK, FB_BLANK_POWERDOWN);
 	munmap(overlay_buf, overlay_sz);
 
 	close(fd_fb);
+
+#ifndef INITROOT_STARTUP
 	return EXIT_SUCCESS;
+#else
+	startup_end(EXIT_SUCCESS);
+#endif
 }

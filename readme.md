@@ -3,9 +3,9 @@
 
 	使用方法:
 
-		compile: arm-linux-gnueabihf-g++ -std=c++11 splash.cpp -o splash
+		compile: cmake . && make
 
-		running example: ./splash /dev/fb1
+		running example: ./fb-color /dev/fb1
 
 
 	注: 使用fbset来判断像素点r g b a的排列顺序
