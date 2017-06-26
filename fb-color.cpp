@@ -68,7 +68,12 @@ int main(int argc, char **argv)
         }
 
         ioctl(fd_fb, FBIOGET_VSCREENINFO, &fb_var);
+        fprintf(stdout, "BitDepth: %d\n", fb_var.bits_per_pixel);
         fprintf(stdout, "RES: %d, %d\n", fb_var.xres, fb_var.yres);
+        fprintf(stdout, "RES Red: %d, %d\n", fb_var.red.offset, fb_var.red.length);
+        fprintf(stdout, "RES Blue: %d, %d\n", fb_var.blue.offset, fb_var.blue.length);
+        fprintf(stdout, "RES Green: %d, %d\n", fb_var.green.offset, fb_var.green.length);
+        fprintf(stdout, "RES Transp: %d, %d\n", fb_var.transp.offset, fb_var.transp.length);
 
         overlay_sz = fb_var.xres * fb_var.yres * 4;
         fprintf(stdout, "Screen Size: %zu\n", overlay_sz);
@@ -131,7 +136,7 @@ int main(int argc, char **argv)
             // row Rainbow
             for (size_t i = 0; i < fb_var.xres; i++) {
                 for (size_t j = 0; j < fb_var.yres; j++) {
-                    int index = (int)(i / 288);
+                    size_t index = i / (fb_var.xres/5);
                     /*
                      * 列         数字下标偏移量
                      * i   +    j * fb_var.yres * 4
@@ -176,7 +181,7 @@ int main(int argc, char **argv)
             // column Rainbow
             for (size_t i = 0; i < fb_var.xres; i++) {
                 for (size_t j = 0; j < fb_var.yres; j++) {
-                    int index = (int)(j / 108);
+                    size_t index = j / (fb_var.yres/5);
                     switch (index) {
                     case 0:
                         overlay_buf[(i + j * fb_var.xres) * 4] = 0xff;
