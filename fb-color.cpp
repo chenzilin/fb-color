@@ -41,8 +41,8 @@ int startup_pre_end(void) { return 0; }
 int main(int argc, char **argv)
 {
 #ifdef INITROOT_STARTUP
-	startup_begin();
-	startup_cend(startup_pre_end);
+    startup_begin();
+    startup_cend(startup_pre_end);
 #endif
 
         int fd_fb;
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         ioctl(fd_fb, MXCFB_SET_GBL_ALPHA, &alpha);
 
         // enable FB
-        ioctl(fd_fb, FBIOBLANK, FB_BLANK_UNBLANK);
+        ioctl(fd_fb, FBIOBLANK, VESA_NO_BLANKING);
 
         do {
             // draw red
@@ -221,15 +221,15 @@ int main(int argc, char **argv)
             sleep(1);
         } while (true);
 
-	// disable FB
-//	ioctl(fd_fb, FBIOBLANK, FB_BLANK_POWERDOWN);
-	munmap(overlay_buf, overlay_sz);
+    // disable FB
+    //ioctl(fd_fb, FBIOBLANK, FB_BLANK_POWERDOWN);
+    munmap(overlay_buf, overlay_sz);
 
-	close(fd_fb);
+    close(fd_fb);
 
 #ifndef INITROOT_STARTUP
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 #else
-	startup_end(EXIT_SUCCESS);
+    startup_end(EXIT_SUCCESS);
 #endif
 }
